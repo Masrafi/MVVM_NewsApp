@@ -1,32 +1,35 @@
+//View Model  4th
+
 import 'package:flutter/material.dart';
 import 'package:mvvm/model/news_articles.dart';
+import 'package:mvvm/services/web_services.dart';
+import 'news_article_view_model.dart';
 
-class NewsArticleViewModel {
-  NewsArticle _newsArticle;
+enum LoadingStatus {
+  completed,
+  searching,
+  empty,
+}
 
-  NewsArticleViewModel({NewsArticle article}) : _newsArticle = article;
+class NewsArticleListViewModel with ChangeNotifier {
+  LoadingStatus loadingStatus = LoadingStatus.searching;
+  List<NewsArticleViewModel> articles = List<NewsArticleViewModel>();
 
-  String get title {
-    return _newsArticle.title;
-  }
+  void topHeadlines() async {
+    List<NewsArticle> newsArticles = await WebService().fetchTopHeadLines();
+    loadingStatus = LoadingStatus.searching;
+    notifyListeners();
 
-  String get description {
-    return _newsArticle.description;
-  }
+    this.articles = newsArticles
+        .map((article) => NewsArticleViewModel(article: article))
+        .toList();
 
-  String get imageUrl {
-    return _newsArticle.urlToImage;
-  }
+    if (this.articles.isEmpty) {
+      this.loadingStatus = LoadingStatus.empty;
+    } else {
+      this.loadingStatus = LoadingStatus.completed;
+    }
 
-  String get url {
-    return _newsArticle.url;
-  }
-
-  String get author {
-    return _newsArticle.author;
-  }
-
-  String get publishedAt {
-    return _newsArticle.publishedAt;
+    notifyListeners();
   }
 }
